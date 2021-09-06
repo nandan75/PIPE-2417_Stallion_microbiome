@@ -1,0 +1,85 @@
+---
+title: "PIPE-2417_Stallion_microbiome  : DADA2R_to_QIIME2"
+author: "Nandan Deshpande"
+date: "5 Sep 2021"
+output:
+  html_notebook:
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+__Last updated__: `r Sys.Date()`
+
+```{r, echo=FALSE}
+library(knitr)
+opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(fig.width=20, fig.height=8) 
+```
+
+
+# Description
+SIH Project: [PIPE-2417](https://ctdshub.atlassian.net/secure/RapidBoard.jspa?rapidView=27&projectKey=PIPE&modal=detail&selectedIssue=PIPE-2417)
+
+
+# People
+
+__LCI:__ ???
+
+__PhD candidate:__ Dr Giselle Cooke
+
+__USyd Researcher__: Dr Joanna Harnett  
+
+
+__SIH staff members__
+
+* Tracy Chew (Nandan's group lead)
+* Nandan Deshpande (16S amplicon sequencing - PacBio reads)
+
+# Compute facilities
+
+Artemis
+
+Project: Sperm_quality
+
+Directory: 
+
+
+```{r}
+
+#module load R/4.0.4 (at unix prompt)
+
+
+#Load modules
+library(dada2);packageVersion("dada2")
+library(Biostrings); packageVersion("Biostrings")
+library(ShortRead); packageVersion("ShortRead")
+library(ggplot2); packageVersion("ggplot2")
+library(reshape2); packageVersion("reshape2")
+library(gridExtra); packageVersion("gridExtra")
+library(phyloseq); packageVersion("phyloseq")
+
+# SET paths
+
+base_path="/project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/intervention_study"
+
+path2 <- base_path+"/data/raw_data_zipped"
+path.out <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/Figures"
+path.rds <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/RDS/"
+```
+
+```{r}
+# Read the stored .rds file
+st2 <- readRDS(file.path(path.rds, "Intervention_st2.rds"))
+tax2 <- readRDS(file.path(path.rds, "Intervention_tax2_Silva128.rds"))
+
+# Create a phyloseq object
+ps <- phyloseq(otu_table(st2, taxa_are_rows=FALSE),tax_table(tax2))
+```
+
+

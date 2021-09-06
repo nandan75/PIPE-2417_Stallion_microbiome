@@ -1,5 +1,5 @@
 ---
-title: "PIPE-2417_Stallion_microbiome"
+title: "PIPE-2417_Stallion_microbiome : DADA2inR"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
 output:
@@ -47,7 +47,7 @@ Artemis
 
 Project: Sperm_quality
 
-Directory: /scratch/er01/PIPE-1943_Glioblastomas
+Directory: 
 
 
 # PRIMARY REFERENCES
@@ -122,6 +122,7 @@ lens <- do.call(c, lens.fn)
 ```
 
 ![histogram](histogram.png)
+
 # Filter:
 ```{r}
 
