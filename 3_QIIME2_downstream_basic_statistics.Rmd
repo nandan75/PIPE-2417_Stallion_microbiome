@@ -39,22 +39,21 @@ __USyd Researcher__: Dr Joanna Harnett
 __SIH staff members__
 
 * Tracy Chew (Nandan's group lead)
-* Nandan Deshpande (16S amplicon sequencing - PacBio reads)
+* Nandan Deshpande 
+
 
 # Compute facilities
-
 Artemis
 
 Project: Sperm_quality
 
-Directory: 
+Directory: /project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/
 
 # PRIMARY REFERENCES
+Alpha and Beta Diversity Explanations and Commands
+https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282
+
 ```{r}
-# Alpha and Beta Diversity Explanations and Commands
-#https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282
-
-
 # Load QIIME2 module in artemis
 module load anaconda3
 conda activate qiime2-2020.8
@@ -62,8 +61,8 @@ conda activate qiime2-2020.8
 ```
 
 
-# Filtering data 
-## Filter a feature table 
+
+# Filter a feature table 
 ```{r}
 # Retain non-singleton features: present in atleast more than 1 sample 
 
@@ -88,7 +87,7 @@ qiime feature-table summarize \
 
 ```
 
-#Generate a tree for phylogenetic diversity analyses
+# Generate a tree for phylogenetic diversity analyses
 ```{r}
 # QIIME supports several phylogenetic diversity metrics
 # In addition to counts of features per sample, these metrics require a rooted phylogenetic tree relating the features to one another. 
@@ -135,17 +134,17 @@ Beta diversity
 ```
 
 
-## Metadata in QIIME 2
+# Metadata in QIIME 2
 https://docs.qiime2.org/2021.4/tutorials/metadata/
 
-## Metadata-based filtering
+# Metadata-based filtering
 ```{r}
 # e.g. based on a "source" colummn in the metadata file "faecal" i.e. retain samples from faecal origin only
 qiime feature-table filter-samples \
   --i-table sample-contingency-filtered-minTwoSamples_table.qza \
-    --m-metadata-file ../metadata_sheet1.0.tsv \
-      --p-where "[source]='faecal'" \
-        --o-filtered-table $faecal_basePath/faecal-filtered-table.qza
+  --m-metadata-file ../metadata_sheet1.0.tsv \
+  --p-where "[source]='faecal'" \
+  --o-filtered-table $faecal_basePath/faecal-filtered-table.qza
 
 ```
 

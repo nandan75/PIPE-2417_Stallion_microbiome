@@ -1,5 +1,5 @@
 ---
-title: "PIPE-2417_Stallion_microbiome (16S amplicon sequencing using PacBio reads) - DADA2 in R"
+title: "PIPE-2417_Stallion_microbiome: Analyze 16S amplicon  PacBio sequencing reads"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
 output:
@@ -39,7 +39,7 @@ __USyd Researcher__: Dr Joanna Harnett
 __SIH staff members__
 
 * Tracy Chew (Nandan's group lead)
-* Nandan Deshpande (16S amplicon sequencing - PacBio reads)
+* Nandan Deshpande 
 
 # Compute facilities
 
@@ -47,23 +47,31 @@ Artemis
 
 Project: Sperm_quality
 
-Directory: 
+Directory: /project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/
 
 
 # PRIMARY REFERENCES
 
 (1) DADA2 + PacBio: Fecal Samples
-https://benjjneb.github.io/LRASManuscript/LRASms_fecal.html
+:https://benjjneb.github.io/LRASManuscript/LRASms_fecal.html
 
 (2) A full example workflow for amplicon data
-https://astrobiomike.github.io/amplicon/dada2_workflow_ex
+:https://astrobiomike.github.io/amplicon/dada2_workflow_ex
 
 (3) Amplicon analysis
- https://astrobiomike.github.io/amplicon/
+ :https://astrobiomike.github.io/amplicon/
 
 
-DADA2: A workflow for recovering single-nucleotide resolved Amplicon Sequence Variants (ASVs) from amplicon data https://benjjneb.github.io/dada2/index.html
 
+
+
+![](16S_amplicon_PacBio_DAAD2R_QIIME2.png)
+
+
+
+# DADA2 in R
+A workflow for recovering single-nucleotide resolved Amplicon Sequence Variants (ASVs) from amplicon data 
+https://benjjneb.github.io/dada2/index.html
 
 ```{r}
 
@@ -87,8 +95,9 @@ path.out <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/ite
 path.rds <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/RDS/"
 ```
 
-# Remove Primers and Filter
-Comparison Between V3V4 And Full-Length Sequencing Of 16S RRNA Genes (Specific mention of the full length primers used for PacBio) 
+# Remove primer seqeunces
+
+Check the reference(s) for comparison between V3V4 And full-length sequencing Of 16S RRNA Genes 
 https://help.ezbiocloud.net/comparison-between-v3v4-and-full-length-sequencing-of-16s-rrna-genes/
 https://academic.oup.com/nar/article/47/18/e103/5527971
 
@@ -110,7 +119,7 @@ print("DONE : Remove Primers")
 
 ```
 
-# Inspect length distribution.
+# Inspect length distribution after primer removal
 ```{r}
 
 lens.fn <- lapply(nops2, function(fn) nchar(getSequences(fn)))
@@ -124,11 +133,10 @@ lens <- do.call(c, lens.fn)
 
 ![histogram](histogram.png)
 
-# Filter:
+# Filter (quality anbd length)
 ```{r}
 
 filts2 <- file.path(path2, "noprimers", "filtered", basename(fns2))
-print("DONE : Remove  Filter")
 
 track2 <- filterAndTrim(nops2, filts2, minQ=3, minLen=1000, maxLen=1600, maxN=0, rm.phix=FALSE, maxEE=2)
 track2
@@ -136,21 +144,19 @@ track2
 ```
 
 # Run DADA2
+
+## Dereplicate
 (A) derepFastq: Read in and dereplicate a fastq file.
-Dereplication is a common step in many amplicon processing workflows. Instead of keeping 100 identical sequences and doing all 
-downstream processing to all 100, you can keep/process one of them and just attach the number 100 to it. 
+Dereplication is a common step in many amplicon processing workflows. Instead of keeping 100 identical sequences and doing all downstream processing to all 100, you can keep/process one of them and just attach the number 100 to it. 
 When DADA2 dereplicates sequences, it also generates a new quality-score profile of each unique sequence based on the average quality scores of each base of all of the sequences that were replicates of it.
-
-
 
 ```{r}
 drp2 <- derepFastq(filts2, verbose=TRUE)
 ```
 
-# Generating an error model
+## Generate an error model
 Generating our error model by learning the specific error-signature of our dataset. 
 Each sequencing run, even when all goes well, will have its own subtle variations to its error profile. 
-
 Error rates are learned by alternating between sample inference and error rate estimation until convergence. 
 Sample inferences is performed by the dada function. 
 Error rate estimation is performed by errorEstimationFunction. 
@@ -160,17 +166,16 @@ Computationally intensive step
 ```{r}
 err2 <- learnErrors(drp2, errorEstimationFunction=PacBioErrfun, BAND_SIZE=32, multithread=TRUE)
 
-
 saveRDS(err2, file.path(path.rds, "Intervention_err2.rds"))
 
-#Inspect errors: Agin the image issue
+#Inspect errors: Again the image issue
 #plotErrors(err2)
 
 print("DONE : Learn errors")
 
 ```
 
-# Inferring ASVs
+## Infer ASVs
 
 To infer true biological sequences. 
 It does this by incorporating the consensus quality profiles and abundances of each unique sequence, and then figuring out if each sequence is more likely to be of biological origin or more likely to be spurious.
@@ -195,13 +200,16 @@ class(seqtab) # matrix
 ##Inspect distribution of sequence lengths
 table(nchar(getSequences(st2)))
 
+
+#The sequence table is a matrix with 
+  # rows corresponding to (and named by) the samples, and 
+  # columns corresponding to (and named by) the sequence variants.
+
+
 ```
-The sequence table is a matrix with 
-  rows corresponding to (and named by) the samples, and 
-  columns corresponding to (and named by) the sequence variants.
 
 
-#  Chimera identification
+#  Identify chimeras
 
 This function is a wrapper around isBimera for collections of unique sequences (i.e. sequences with associated abundances). Each sequence is evaluated against a set of "parents" drawn from the sequence collection that are sufficiently more abundant than the sequence being evaluated. A logical vector is returned, with an entry for each input sequence indicating whether it was (was not) consistent with being a bimera of those more abundant "parents".
 https://www.rdocumentation.org/packages/dada2/versions/1.0.3/topics/isBimeraDenovo
@@ -224,7 +232,8 @@ st2.nochim <- removeBimeraDenovo(st2, verbose=T)
 ```
 
 # Assign taxonomy
-It is common at this point, especially in 16S/18S/ITS amplicon sequencing, to assign taxonomy to the sequence variants. The DADA2 package provides a native implementation of the naive Bayesian classifier method for this purpose. The assignTaxonomy function takes as input a set of sequences to be classified and a training set of reference sequences with known taxonomy, and outputs taxonomic assignments with at least minBoot bootstrap confidence.
+The DADA2 package provides a native implementation of the naive Bayesian classifier method for this purpose. 
+The assignTaxonomy function takes as input a set of sequences to be classified and a training set of reference sequences with known taxonomy, and outputs taxonomic assignments with at least minBoot bootstrap confidence.
 
 
 ## Using assignTaxonomy() function
@@ -244,7 +253,6 @@ tax2[,"Genus"] <- gsub("Escherichia/Shigella", "Escherichia", tax2[,"Genus"]) # 
 # To follow the optional species addition step, download the silva_species_assignment_v132.fa.gz file, and place it in the directory with the fastq files.
 
 tax2_species_level <- addSpecies(tax2, "silva_species_assignment_v128.fa.gz")
-```
 
 
 # Extract sample names from the filenames:
@@ -253,30 +261,17 @@ sample.names2 <- gsub(".fastq.gz", "", sample.names2)
 rownames(st2) <- sample.names2
 sample.names2
 
-```
 
-# Save processed objects for future analysis.
-```{r}
-
-# Since dada() and assignTaxonomy() commands are the most time consuming steps in this workflow, it is recommended that we save the results from these for downstream analysis. 
-
-saveRDS(st2.nochim, file.path(path.rds, "Intervention_st2.nochim.rds"))
-
-saveRDS(tax2, file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
-saveRDS(tax2_species_level, file.path(path.rds, "Intervention_tax2_Silva128_withSpecies.rds"))
-
-
-
-print("DONE : Extract sample names from the filenames")
 ```
 
 
-# Alternatively assign Taxonomy using DECIPHER
+
+## Assign Taxonomy using DECIPHER
 ```{r}
 # Downloading DECIPHER-formatted SILVA v138 reference
 download.file(url="http://www2.decipher.codes/Classification/TrainingSets/SILVA_SSU_r138_2019.RData", destfile="SILVA_SSU_r138_2019.RData")
 
-## loading reference taxonomy object
+## Loading reference taxonomy object
 load("SILVA_SSU_r138_2019.RData")
 
 st2 <- readRDS(file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
@@ -291,9 +286,22 @@ tax_info <- IdTaxa(test=dna, trainingSet=trainingSet, strand="both", processors=
 #Also check the section Alternatives:
 #https://benjjneb.github.io/dada2/tutorial.html
 
-saveRDS(tax_info, file.path(path.rds, "Intervention_tax2.nochim_DECIPHER_Silva138.rds"))
 ```
 
+# Save processed objects for downstream analysis.
+```{r}
+
+# Since dada() and assignTaxonomy() commands are the most time consuming steps in this workflow, it is recommended that we save the results from these for downstream analysis. 
+
+saveRDS(st2.nochim, file.path(path.rds, "Intervention_st2.nochim.rds"))
+
+saveRDS(tax2, file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
+
+saveRDS(tax2_species_level, file.path(path.rds, "Intervention_tax2_Silva128_withSpecies.rds"))
+
+saveRDS(tax_info, file.path(path.rds, "Intervention_tax2.nochim_DECIPHER_Silva138.rds"))
+
+```
 
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.

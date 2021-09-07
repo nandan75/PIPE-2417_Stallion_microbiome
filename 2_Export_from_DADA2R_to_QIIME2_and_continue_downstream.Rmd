@@ -39,7 +39,7 @@ __USyd Researcher__: Dr Joanna Harnett
 __SIH staff members__
 
 * Tracy Chew (Nandan's group lead)
-* Nandan Deshpande (16S amplicon sequencing - PacBio reads)
+* Nandan Deshpande 
 
 # Compute facilities
 
@@ -47,7 +47,7 @@ Artemis
 
 Project: Sperm_quality
 
-Directory: 
+Directory: /project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/
 
 
 # PRIMARY REFERENCES
