@@ -50,6 +50,9 @@ Project: Sperm_quality
 Directory: 
 
 
+# PRIMARY REFERENCES
+Importing dada2 and Phyloseq objects to QIIME 2: https://forum.qiime2.org/t/importing-dada2-and-phyloseq-objects-to-qiime-2/4683
+
 ```{r}
 
 #module load R/4.0.4 (at unix prompt)
@@ -73,13 +76,104 @@ path.out <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/ite
 path.rds <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/RDS/"
 ```
 
+# Read the processed/stored '.rds' file(s)
 ```{r}
-# Read the stored .rds file
 st2 <- readRDS(file.path(path.rds, "Intervention_st2.rds"))
 tax2 <- readRDS(file.path(path.rds, "Intervention_tax2_Silva128.rds"))
+```
+
+# Prepare and Export Taxonomy, OTU Table
+```{r}
+
 
 # Create a phyloseq object
 ps <- phyloseq(otu_table(st2, taxa_are_rows=FALSE),tax_table(tax2))
+
+
+
+#Prepare and Export Taxonomy
+tax<-as(tax_table(ps),"matrix")
+tax_cols <- colnames(tax)
+tax<-as.data.frame(tax)
+tax$taxonomy<-do.call(paste, c(tax[tax_cols], sep=";"))
+for(co in tax_cols) tax[co]<-NULL
+write.table(tax, "tax_for_qqime2.txt", quote=FALSE, col.names=FALSE, sep="\t")
+
+
+# Export feature/OTU table
+
+# As a biom file
+
+#library(biomformat);packageVersion("biomformat")
+## [1] ‘1.6.0’
+
+otu<-t(as(otu_table(ps),"matrix")) # 't' to transform if taxa_are_rows=FALSE
+#if taxa_are_rows=TRUE
+#otu<-as(otu_table(GlobalPatterns),"matrix"))
+otu_biom<-make_biom(data=otu)
+write_biom(otu_biom,"otu_biom.biom")
+
+# As a text file
+write.table(t(st2), "seqtab.txt", sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+#or from the phyloseq object, 't' to transform if taxa_are_rows=FALSE, no 't' if taxa_are_rows=TRUE
+#write.table(t(otu_table(ps), "seqtab.txt",sep="\t", row.names=TRUE, col.names=NA, quote=FALSE)
+
+
+#uniquesToFasta: Write a uniques vector to a FASTA file : https://www.rdocumentation.org/packages/dada2/versions/1.0.3/topics/uniquesToFasta
+uniquesToFasta(st2, fout='st2_rep-seqs.fna', ids=colnames(st2))
+
+
 ```
 
 
+# In QIIME2
+```{r}
+
+#Import feature table from exported biom (Check if this worked)
+qiime tools import \
+  --input-path otu_biom.biom \
+  --type 'FeatureTable[Frequency]' \
+  --input-format BIOMV100Format \
+  --output-path feature-table-1.qza
+
+
+
+#Import feature table from text file:
+echo -n "#OTU Table" | cat - seqtab.txt > seqtab-biom-table.txt
+
+
+#biom is a command from qiime2 package
+biom convert -i seqtab-biom-table.txt -o  seqtab-biom-table.biom --table-type="OTU table" --to-hdf5
+
+qiime tools import \
+--input-path  seqtab-biom-table.biom \
+--type 'FeatureTable[Frequency]' \
+--input-format BIOMV210Format \
+--output-path feature-table2_from_DADA2R.qza
+
+
+
+## Import the taxonomy table:
+qiime tools import \
+--type 'FeatureData[Taxonomy]' \
+--input-format HeaderlessTSVTaxonomyFormat \
+--input-path tax_for_qqime2.txt \
+--output-path taxonomy_from_DADA2R.qza
+
+qiime metadata tabulate \
+  --m-input-file taxonomy_from_DADA2R.qza \
+  --o-visualization taxonomy_from_DADA2R.qzv
+
+
+## Generate visualization : taxa-bar-plots
+qiime taxa barplot \
+  --i-table feature-table2_from_DADA2R.qza \
+  --i-taxonomy taxonomy_from_DADA2R.qza \
+  --m-metadata-file metadata_sheet2.0.tsv \
+  --o-visualization taxa-bar-plots_from_DADA2R_metadata_sheet2.0.qzv
+
+
+## Convert biom format to tab-delimited table format:
+biom convert -i table.biom -o table.from_biom.txt --to-tsv
+
+```
