@@ -1,0 +1,166 @@
+---
+title: "(16S amplicon sequencing using PacBio reads) : QIIME2 downstream - basic statisics"
+author: "Nandan Deshpande"
+date: "5 Sep 2021"
+output:
+  html_notebook:
+    number_sections: yes
+    theme: united
+    toc: yes
+    toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
+editor_options:
+  chunk_output_type: inline
+---
+__Last updated__: `r Sys.Date()`
+
+```{r, echo=FALSE}
+library(knitr)
+opts_chunk$set(fig.align = "center")
+knitr::opts_chunk$set(fig.width=20, fig.height=8) 
+```
+
+
+# Description
+SIH Project: [PIPE-2417](https://ctdshub.atlassian.net/secure/RapidBoard.jspa?rapidView=27&projectKey=PIPE&modal=detail&selectedIssue=PIPE-2417)
+
+
+# People
+
+__LCI:__ ???
+
+__PhD candidate:__ Dr Giselle Cooke
+
+__USyd Researcher__: Dr Joanna Harnett  
+
+
+__SIH staff members__
+
+* Tracy Chew (Nandan's group lead)
+* Nandan Deshpande (16S amplicon sequencing - PacBio reads)
+
+# Compute facilities
+
+Artemis
+
+Project: Sperm_quality
+
+Directory: 
+
+# PRIMARY REFERENCES
+```{r}
+# Alpha and Beta Diversity Explanations and Commands
+#https://forum.qiime2.org/t/alpha-and-beta-diversity-explanations-and-commands/2282
+
+
+# Load QIIME2 module in artemis
+module load anaconda3
+conda activate qiime2-2020.8
+
+```
+
+
+# Filtering data 
+## Filter a feature table 
+```{r}
+# Retain non-singleton features: present in atleast more than 1 sample 
+
+# https://docs.qiime2.org/2021.4/tutorials/filtering/
+# https://forum.qiime2.org/t/filtering-sequences-based-upon-filtered-feature-table/12886
+qiime feature-table filter-features \
+  --i-table feature-table2_from_DADA2R.qza \
+  --p-min-samples 2 \
+  --o-filtered-table sample-contingency-filtered-minTwoSamples_table.qza
+
+# Get filtered sequences based on filtered table from all seqeunces 
+qiime feature-table filter-seqs \
+       --i-data ../st2_rep-seqs.qza  \
+       --i-table sample-contingency-filtered-minTwoSamples_table.qza \
+       --o-filtered-data sample-contingency-filtered-minTwoSamples_sequences.qza
+
+
+# Summarize a feature table
+qiime feature-table summarize \
+   --i-table sample-contingency-filtered-minTwoSamples_table.qza \
+      --o-visualization dada2R_table_summary-filtered-minTwoSamples.qzv
+
+```
+
+#Generate a tree for phylogenetic diversity analyses
+```{r}
+# QIIME supports several phylogenetic diversity metrics
+# In addition to counts of features per sample, these metrics require a rooted phylogenetic tree relating the features to one another. 
+
+qiime phylogeny align-to-tree-mafft-fasttree \
+  --i-sequences sample-contingency-filtered-minTwoSamples_sequences.qza \
+  --o-alignment aligned-contingency-filtered-minTwoSamples_sequences.qza \
+  --o-masked-alignment masked-aligned-contingency-filtered-minTwoSamples_sequences.qza \
+  --o-tree unrooted-tree_contingency-filtered-minTwoSamples_sequences.qza \
+  --o-rooted-tree rooted-tree_contingency-filtered-minTwoSamples_sequences.qza \
+  --p-n-threads 3
+```
+
+# Alpha and beta diversity analysis
+```{r}
+# QIIME 2’s diversity analyses are available through the q2-diversity plugin, which supports 
+  # Computing alpha and beta diversity metrics
+  # Applying related statistical tests, and 
+  # Generating interactive visualizations.
+
+# An important parameter that needs to be provided to this script is --p-sampling-depth, which is the even sampling (i.e. rarefaction) depth. 
+# We can identify  the best value for the variable '--p-sampling-depth' in order to to retain all samples $SAMPLING_DEPTH by visualising the file  - dada2_table_summary.qzv
+qiime diversity core-metrics-phylogenetic \
+  --i-phylogeny rooted-tree_contingency-filtered-minTwoSamples_sequences.qza \
+  --i-table sample-contingency-filtered-minTwoSamples_table.qza \
+  --p-sampling-depth $SAMPLING_DEPTH \
+  --m-metadata-file ../metadata_sheet2.0.tsv \
+  --output-dir core-metrics-results-filtered-minTwoSample
+
+
+#The metrics computed by default are:
+Alpha diversity
+  Shannon’s diversity index (a quantitative measure of community richness)
+  Observed Features (a qualitative measure of community richness)
+  Faith’s Phylogenetic Diversity (a qualitiative measure of community richness that incorporates phylogenetic relationships between the features)
+  Evenness (or Pielou’s Evenness; a measure of community evenness)
+Beta diversity
+  Jaccard distance (a qualitative measure of community dissimilarity)
+  Bray-Curtis distance (a quantitative measure of community dissimilarity)
+  unweighted UniFrac distance (a qualitative measure of community dissimilarity that incorporates phylogenetic relationships between the features)
+  weighted UniFrac distance (a quantitative measure of community dissimilarity that incorporates phylogenetic relationships between the features)
+
+
+```
+
+
+## Metadata in QIIME 2
+https://docs.qiime2.org/2021.4/tutorials/metadata/
+
+## Metadata-based filtering
+```{r}
+# e.g. based on a "source" colummn in the metadata file "faecal" i.e. retain samples from faecal origin only
+qiime feature-table filter-samples \
+  --i-table sample-contingency-filtered-minTwoSamples_table.qza \
+    --m-metadata-file ../metadata_sheet1.0.tsv \
+      --p-where "[source]='faecal'" \
+        --o-filtered-table $faecal_basePath/faecal-filtered-table.qza
+
+```
+
+# Associations between categorical metadata columns and alpha diversity data
+```{r}
+
+#Faith Phylogenetic Diversity
+
+qiime diversity alpha-group-significance \
+  --i-alpha-diversity core-metrics-results-filtered-minTwoSample/faith_pd_vector.qza \
+  --m-metadata-file ../metadata_sheet2.0.tsv \
+  --o-visualization core-metrics-results-filtered-minTwoSample/faith-pd-group-significance.qzv
+
+
+
+
+```
+
