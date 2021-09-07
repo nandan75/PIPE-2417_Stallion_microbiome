@@ -3,14 +3,14 @@ title: "(16S amplicon sequencing using PacBio reads) : DADA2R_to_QIIME2"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
   html_notebook:
     number_sections: yes
     theme: united
     toc: yes
     toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
 editor_options:
   chunk_output_type: inline
 ---
@@ -51,14 +51,19 @@ Directory: /project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_
 
 
 # PRIMARY REFERENCES
-Importing dada2 and Phyloseq objects to QIIME 2: https://forum.qiime2.org/t/importing-dada2-and-phyloseq-objects-to-qiime-2/4683
+Exporting dada2 and Phyloseq objects to QIIME 2: https://forum.qiime2.org/t/importing-dada2-and-phyloseq-objects-to-qiime-2/4683
 
 ```{r}
 
 # At command prompt 
 module load R/4.0.4 
 
-# Type R and "Enter" at the command prompt to enter R-environment
+
+# The following script represents the R-script "export_DADA2R_objects_to_QIIME2.R"
+# This is run as > Rscript export_DADA2R_objects_to_QIIME2.R 
+
+#########################################################
+
 
 #Load modules
 library(dada2);packageVersion("dada2")
@@ -129,6 +134,7 @@ uniquesToFasta(st2, fout='st2_rep-seqs.fna', ids=colnames(st2))
 
 
 # EXIT R environment
+#########################################################
 
 ```
 

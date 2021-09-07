@@ -75,10 +75,16 @@ https://benjjneb.github.io/dada2/index.html
 
 ```{r}
 
-#module load R/4.0.4 (at unix prompt)
+module load R/4.0.4 (at unix prompt)
 
 
-#Load modules
+# The following script represents the R-script "run_DADA2inR.R"
+# This is run as > Rscript run_DADA2inR.R 
+
+#########################################################
+
+
+# Load modules
 library(dada2);packageVersion("dada2")
 library(Biostrings); packageVersion("Biostrings")
 library(ShortRead); packageVersion("ShortRead")
@@ -102,6 +108,7 @@ https://help.ezbiocloud.net/comparison-between-v3v4-and-full-length-sequencing-o
 https://academic.oup.com/nar/article/47/18/e103/5527971
 
 ```{r}
+# Read compressed fastq files 
 
 fns2 <- list.files(path2, pattern="fastq.gz", full.names=TRUE)
 
@@ -146,7 +153,7 @@ track2
 # Run DADA2
 
 ## Dereplicate
-(A) derepFastq: Read in and dereplicate a fastq file.
+derepFastq: Read in and dereplicate a fastq file.
 Dereplication is a common step in many amplicon processing workflows. Instead of keeping 100 identical sequences and doing all downstream processing to all 100, you can keep/process one of them and just attach the number 100 to it. 
 When DADA2 dereplicates sequences, it also generates a new quality-score profile of each unique sequence based on the average quality scores of each base of all of the sequences that were replicates of it.
 
@@ -300,6 +307,8 @@ saveRDS(tax2, file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
 saveRDS(tax2_species_level, file.path(path.rds, "Intervention_tax2_Silva128_withSpecies.rds"))
 
 saveRDS(tax_info, file.path(path.rds, "Intervention_tax2.nochim_DECIPHER_Silva138.rds"))
+
+#########################################################
 
 ```
 
