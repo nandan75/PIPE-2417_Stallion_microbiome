@@ -55,8 +55,10 @@ Importing dada2 and Phyloseq objects to QIIME 2: https://forum.qiime2.org/t/impo
 
 ```{r}
 
-#module load R/4.0.4 (at unix prompt)
+# At command prompt 
+module load R/4.0.4 
 
+# Type R and "Enter" at the command prompt to enter R-environment
 
 #Load modules
 library(dada2);packageVersion("dada2")
@@ -78,8 +80,11 @@ path.rds <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/ite
 
 # Read the processed/stored '.rds' file(s)
 ```{r}
-st2 <- readRDS(file.path(path.rds, "Intervention_st2.rds"))
-tax2 <- readRDS(file.path(path.rds, "Intervention_tax2_Silva128.rds"))
+
+st2 <- readRDS(file.path(path.rds, "Intervention_st2.nochim.rds"))
+tax2 <- readRDS(file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
+tax2_species_level <- readRDS(file.path(path.rds, "Intervention_tax2_Silva128_withSpecies.rds"))
+
 ```
 
 # Prepare and Export Taxonomy, OTU Table
@@ -123,20 +128,34 @@ write.table(t(st2), "seqtab.txt", sep="\t", row.names=TRUE, col.names=NA, quote=
 uniquesToFasta(st2, fout='st2_rep-seqs.fna', ids=colnames(st2))
 
 
+# EXIT R environment
+
 ```
 
 
 # In QIIME2
 ```{r}
 
+# The commands from this point froward should be run outside R environment ; at a command prompt on Artemis/local machine
+
+#If you are running QIIME2 on 
+
+  # Artemis (USyd)
+# Load QIIME2 module in artemis
+module load anaconda3
+conda activate qiime2-2020.8
+
+#else
+  #Please install QIIME2 as per https://docs.qiime2.org/2021.4/install/
+
 #Import feature table from exported biom (Check if this worked)
 qiime tools import \
   --input-path otu_biom.biom \
   --type 'FeatureTable[Frequency]' \
   --input-format BIOMV100Format \
-  --output-path feature-table-1.qza
+  --output-path feature-table2_from_DADA2R.qza
 
-
+#OR
 
 #Import feature table from text file:
 echo -n "#OTU Table" | cat - seqtab.txt > seqtab-biom-table.txt
@@ -150,7 +169,6 @@ qiime tools import \
 --type 'FeatureTable[Frequency]' \
 --input-format BIOMV210Format \
 --output-path feature-table2_from_DADA2R.qza
-
 
 
 ## Import the taxonomy table:

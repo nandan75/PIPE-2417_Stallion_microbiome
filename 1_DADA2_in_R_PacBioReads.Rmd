@@ -96,6 +96,7 @@ https://academic.oup.com/nar/article/47/18/e103/5527971
 
 fns2 <- list.files(path2, pattern="fastq.gz", full.names=TRUE)
 
+# primers used for PacBio
 F27 <- "AGRGTTYGATYMTGGCTCAG"
 R1492 <- "RGYTACCTTGTTACGACTT"
 rc <- dada2:::rc
@@ -225,13 +226,25 @@ st2.nochim <- removeBimeraDenovo(st2, verbose=T)
 # Assign taxonomy
 It is common at this point, especially in 16S/18S/ITS amplicon sequencing, to assign taxonomy to the sequence variants. The DADA2 package provides a native implementation of the naive Bayesian classifier method for this purpose. The assignTaxonomy function takes as input a set of sequences to be classified and a training set of reference sequences with known taxonomy, and outputs taxonomic assignments with at least minBoot bootstrap confidence.
 
+
+## Using assignTaxonomy() function
 ```{r}
 
 tax2 <- assignTaxonomy(st2.nochim, "/project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/retrospective_study/BenjaminCallahan_approach/silva_nr_v128_train_set.fa.gz", multithread=TRUE) # Slowest part
 tax2[,"Genus"] <- gsub("Escherichia/Shigella", "Escherichia", tax2[,"Genus"]) # Reformat to be compatible with other data sources
-head(unname(tax2))
+#head(unname(tax2))
 
-print("DONE : Assign taxonomy")
+```
+
+## Also addSpecies() after assignTaxonomy()
+```{r}
+# The dada2 package also implements a method to make species level assignments based on exact matching between ASVs and sequenced reference strains. 
+# Recent analysis suggests that exact matching (or 100% identity) is the only appropriate way to assign species to 16S gene fragments. 
+# Currently, species-assignment training fastas are available for the Silva and RDP 16S databases. 
+# To follow the optional species addition step, download the silva_species_assignment_v132.fa.gz file, and place it in the directory with the fastq files.
+
+tax2_species_level <- addSpecies(tax2, "silva_species_assignment_v128.fa.gz")
+```
 
 
 # Extract sample names from the filenames:
@@ -245,12 +258,42 @@ sample.names2
 # Save processed objects for future analysis.
 ```{r}
 
+# Since dada() and assignTaxonomy() commands are the most time consuming steps in this workflow, it is recommended that we save the results from these for downstream analysis. 
+
 saveRDS(st2.nochim, file.path(path.rds, "Intervention_st2.nochim.rds"))
+
 saveRDS(tax2, file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
+saveRDS(tax2_species_level, file.path(path.rds, "Intervention_tax2_Silva128_withSpecies.rds"))
+
 
 
 print("DONE : Extract sample names from the filenames")
 ```
+
+
+# Alternatively assign Taxonomy using DECIPHER
+```{r}
+# Downloading DECIPHER-formatted SILVA v138 reference
+download.file(url="http://www2.decipher.codes/Classification/TrainingSets/SILVA_SSU_r138_2019.RData", destfile="SILVA_SSU_r138_2019.RData")
+
+## loading reference taxonomy object
+load("SILVA_SSU_r138_2019.RData")
+
+st2 <- readRDS(file.path(path.rds, "Intervention_tax2.nochim_Silva128.rds"))
+
+
+#creating DNAStringSet object of our ASVs
+dna <- DNAStringSet(getSequences(st2))
+
+## and classifying
+tax_info <- IdTaxa(test=dna, trainingSet=trainingSet, strand="both", processors=16)
+
+#Also check the section Alternatives:
+#https://benjjneb.github.io/dada2/tutorial.html
+
+saveRDS(tax_info, file.path(path.rds, "Intervention_tax2.nochim_DECIPHER_Silva138.rds"))
+```
+
 
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
