@@ -1,16 +1,16 @@
 ---
-title: "PIPE-2417_Stallion_microbiome : DADA2inR"
+title: "PIPE-2417_Stallion_microbiome (16S amplicon sequencing using PacBio reads) - DADA2 in R"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
 output:
-  html_document:
-    df_print: paged
-    toc: yes
   html_notebook:
     number_sections: yes
     theme: united
     toc: yes
     toc_float: yes
+  html_document:
+    df_print: paged
+    toc: yes
 editor_options:
   chunk_output_type: inline
 ---

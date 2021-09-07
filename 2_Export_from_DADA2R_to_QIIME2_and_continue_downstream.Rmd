@@ -1,5 +1,5 @@
 ---
-title: "PIPE-2417_Stallion_microbiome  : DADA2R_to_QIIME2"
+title: "(16S amplicon sequencing using PacBio reads) : DADA2R_to_QIIME2"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
 output:
