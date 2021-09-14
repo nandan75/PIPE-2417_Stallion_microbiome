@@ -76,11 +76,16 @@ library(phyloseq); packageVersion("phyloseq")
 
 # SET paths
 
-base_path="/project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/intervention_study"
+# SET paths
+base_path <-"/project/RDS-FMH-Sperm_quality-RW/nandanDeshpande/PIPE-2417_Stallion_microbiome/intervention_study"
 
-path2 <- base_path+"/data/raw_data_zipped"
-path.out <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/Figures"
-path.rds <- base_path+"analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/RDS/"
+raw_files<-"data/raw_data_zipped"
+Figures="analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/Figures/"
+RDS="analysis/approach_2_DADA2R_to_QIIME2_BenjaminCallahan/iteration_2_withChimeraRemoval/RDS/"
+
+path.raw_files<-paste(base_path,raw_files,sep="/")
+path.out <-paste(base_path,Figures,sep="/")
+path.rds <-paste(base_path,RDS,sep="/")
 ```
 
 # Read the processed/stored '.rds' file(s)
