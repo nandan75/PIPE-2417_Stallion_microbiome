@@ -2,15 +2,7 @@
 title: "PIPE-2417_Stallion_microbiome: Analyze 16S amplicon  PacBio sequencing reads"
 author: "Nandan Deshpande"
 date: "5 Sep 2021"
-output:
-  html_notebook:
-    number_sections: yes
-    theme: united
-    toc: yes
-    toc_float: yes
-  html_document:
-    df_print: paged
-    toc: yes
+output: rmarkdown::github_document
 editor_options:
   chunk_output_type: inline
 ---
